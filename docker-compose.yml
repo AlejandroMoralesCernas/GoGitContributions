@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  runner:
+    build: .
+    env_file:
+      - .env
+    container_name: gogitcontributions
+    ports:
+      - "8080:8080"
