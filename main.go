@@ -30,6 +30,23 @@ func main() {
 		fmt.Fprintf(w, "User Details: %s\n", userDetails)
 	})
 
+	mux.HandleFunc("/graphql", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("starting graphql...")
+		graphqlResponse, err := service.MakeGithubContributionRequest()
+		if err != nil {
+			http.Error(w, "Error making GraphQL request", http.StatusInternalServerError)
+			return
+		}
+		fmt.Println("GraphQL response received", graphqlResponse)
+		for _, repoContrib := range graphqlResponse.Data.User.ContributionsCollection.CommitContributionsByRepository {
+			fmt.Fprintf(w, "Repo: %s/%s - Contributions: %d\n",
+				repoContrib.Repository.Owner.Login,
+				repoContrib.Repository.Name,
+				repoContrib.Contributions.TotalCount)
+		}
+		fmt.Fprintf(w, "GraphQL endpoint - to be implemented\n")
+	})
+
 	fmt.Println("Starting Go Git Contributions on :8080...")
 	http.ListenAndServe(":8080", mux)
 }
