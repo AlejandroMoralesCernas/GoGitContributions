@@ -111,39 +111,3 @@ func MakeGithubContributionRequest() (api.GraphQLResponse, error) {
 	}
 	return MakeGithubGraphqlRequest(requestBody)
 }
-/* func MakeGithubGraphQLRequest() string {
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	// Build request body as map
-	body := map[string]interface{}{
-		"query": query,
-		"variables": map[string]interface{}{
-			"username": "octocat",
-			"from":     "2025-01-01T00:00:00Z",
-			"to":       "2025-12-31T23:59:59Z",
-		},
-	}
-	
-	// Encode request body directly to a buffer
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		log.Fatal(err)
-	}
-	req, err := http.NewRequest("POST", "https://api.github.com/graphql", &buf)
-	if err != nil {
-		log.Fatal(err)
-	}
-	req.Header.Set("Authorization", "Bearer "+config.GetGithubToken())
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("unexpected status: %s", resp.Status)
-	}
-	//var result map[string]interface{}
-
-
-} */
