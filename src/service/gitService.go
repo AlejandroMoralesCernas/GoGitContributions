@@ -66,4 +66,48 @@ func GetUserDetails() (string, error) {
 	return user.Login, nil
 }
 
+func MakeGithubContributionRequest() (api.GraphQLResponse, error) {
+	fmt.Println("Making GitHub GraphQL request...")
 
+	query := `
+	query($username: String!, $from: DateTime!, $to: DateTime!) {
+		user(login: $username) {
+			contributionsCollection(from: $from, to: $to) {
+				commitContributionsByRepository {
+					repository { name owner { login } }
+					contributions(first: 100) { totalCount }
+				}
+				pullRequestContributionsByRepository {
+					repository { name owner { login } }
+					contributions(first: 100) { totalCount }
+				}
+				issueContributionsByRepository {
+					repository { name owner { login } }
+					contributions(first: 100) { totalCount }
+				}
+				pullRequestReviewContributionsByRepository {
+					repository { name owner { login } }
+					contributions(first: 100) { totalCount }
+				}
+			}
+		}
+	}`
+
+	userDetails, err := GetUserDetails()
+	if err != nil {
+		return api.GraphQLResponse{}, fmt.Errorf("getting user details: %w", err)
+	}
+
+	toTime := time.Now()
+	fromTime := toTime.AddDate(0, -2, 0)
+	
+	requestBody := api.GraphqlRequest{
+		Query: query,
+		Variables: map[string]interface{}{
+			"username": userDetails,
+			"from":     fromTime.Format(time.RFC3339),
+			"to":       toTime.Format(time.RFC3339),
+		},
+	}
+	return MakeGithubGraphqlRequest(requestBody)
+}
