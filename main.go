@@ -21,6 +21,15 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/userDetails", func(w http.ResponseWriter, r *http.Request) {
+		userDetails, err := service.GetUserDetails()
+		if err != nil {
+			http.Error(w, "Error fetching user details", http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "User Details: %s\n", userDetails)
+	})
+
 	fmt.Println("Starting Go Git Contributions on :8080...")
 	http.ListenAndServe(":8080", mux)
 }

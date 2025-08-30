@@ -5,47 +5,65 @@ import (
 	"GoGitContributions/src/config"
 	"net/http"
 	"encoding/json"
-	"io"
 	"GoGitContributions/src/data/api"
+	"time"
 )
-
-func GitService() {
-
-	fmt.Println("Git Service")
-}
 
 func GetPublicRepos() ([]api.Repo, error) {
 	fmt.Println("Getting public repos...")
-	url := "https://api.github.com/user/repos"
 
-	req, err := http.NewRequest("GET", url, nil)
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest("GET", "https://api.github.com/user/repos", nil)
 	if err != nil {
-		fmt.Println("Error creating request:", err)
-		return nil, err
+		return nil, fmt.Errorf("creating request: %w", err)
 	}
-	req.Header.Add("Authorization", "Bearer "+config.GetGithubToken())
+	req.Header.Set("Authorization", "Bearer "+config.GetGithubToken())
 
-	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error making request:", err)
-		return nil, err
+		return nil, fmt.Errorf("making request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response body:", err)
-		return nil, err
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
-
 	var repos []api.Repo
-	if err := json.Unmarshal(body, &repos); err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
-		return nil, err
+	if err := json.NewDecoder(resp.Body).Decode(&repos); err != nil {
+		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
 	return repos, nil
 }
+
+
+func GetUserDetails() (string, error) {
+	fmt.Println("Getting user details...")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest("GET", "https://api.github.com/user", nil)
+	if err != nil {
+		return "", fmt.Errorf("creating request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+config.GetGithubToken())
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("making request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status: %s", resp.Status)
+	}
+
+	var user api.User
+	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+		return "", fmt.Errorf("decoding response: %w", err)
+	}
+
+	return user.Login, nil
+}
+
 
